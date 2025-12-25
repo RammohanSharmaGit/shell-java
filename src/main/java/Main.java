@@ -10,7 +10,9 @@ public class Main {
                 break;
 
             Evaluator e = new Evaluator();
-            System.out.print(e.evaluate(command));
+            String evaluated = e.evaluate(command);
+            if (evaluated!=null)
+                System.out.print(e.evaluate(command));
 
         }
     }

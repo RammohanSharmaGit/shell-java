@@ -1,6 +1,8 @@
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -9,12 +11,12 @@ public class Evaluator {
     List<String> builtInCommands = Arrays.asList("echo", "type", "exit");
 
     public String evaluate(String command) {
-        String [] commandsParts = command.split(" ",2);
+        String [] commandsParts = command.split(" ");
         String evaluated = null;
         switch(commandsParts[0]) {
             case "echo":
                 if (commandsParts.length > 1) {
-                    evaluated = String.format("%s\n", commandsParts[1]);
+                    evaluated = String.format("%s\n", command.split(" ",2)[1]);
                 }
                 break;
             case "type":
@@ -23,6 +25,20 @@ public class Evaluator {
                 }
                 break;
             default:
+                String path = null;
+                if ((path = searchInPath(commandsParts[0])) != null) {
+                List<String> arguments = new ArrayList<>(Arrays.asList(Arrays.copyOfRange(commandsParts,1,commandsParts.length)));
+                arguments.add(0,commandsParts[0]);
+                    try {
+                        ProcessBuilder pb = new ProcessBuilder(arguments);
+                        pb.inheritIO();
+                        Process process = pb.start();
+                        process.waitFor();
+                    } catch (IOException | InterruptedException e) {
+                        throw new RuntimeException(e);
+                    }
+                    break;
+                }
                 evaluated = String.format("%s: command not found\n", command);
         }
         return evaluated;

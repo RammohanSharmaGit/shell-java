@@ -88,8 +88,8 @@ class ShellTest {
         @DisplayName("unknown command with arguments should return full string in error")
         void unknownCommandWithArgs_returnsNotFoundMessage() {
             // Because you format using the full 'command' string in default case
-            String result = evaluator.evaluate("ls -la");
-            Assertions.assertThat(result).isEqualTo("ls -la: command not found\n");
+            String result = evaluator.evaluate("random -la");
+            Assertions.assertThat(result).isEqualTo("random -la: command not found\n");
         }
     }
 }
