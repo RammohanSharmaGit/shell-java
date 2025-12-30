@@ -46,7 +46,7 @@ class ShellTest {
     class CDTests {
         @Test
         @DisplayName("cd with a correct path")
-        void cd_withCorrectPath_returnsPWDWithPath() {
+        void cd_withAbsolutePath_returnsPWDWithPath() {
             evaluator.evaluate("cd /Users");
             String result = evaluator.evaluate("pwd");
             Assertions.assertThat(result).isEqualTo("/Users\n");
@@ -57,6 +57,73 @@ class ShellTest {
         void cd_withRandomPath_returnsError() {
             String result = evaluator.evaluate("cd /random");
             Assertions.assertThat(result).isEqualTo("cd: /random: No such file or directory\n");
+        }
+    }
+
+    @Nested
+    @DisplayName("Tests for 'cd' command with relative paths")
+    class CDRelativeTests {
+
+        @Test
+        @DisplayName("cd with simple relative path (moving down)")
+        void cd_withSimpleRelativePath_updatesPWD() {
+            evaluator.evaluate("cd /Users"); // Start at a known location
+            evaluator.evaluate("cd rammohansharma");  // Move to relative subfolder
+            String result = evaluator.evaluate("pwd");
+            Assertions.assertThat(result).isEqualTo("/Users/rammohansharma\n");
+        }
+
+        @Test
+        @DisplayName("cd .. (moving up one level)")
+        void cd_withParentDirectory_movesUp() {
+            evaluator.evaluate("cd /Users/rammohansharma");
+            evaluator.evaluate("cd ..");
+            String result = evaluator.evaluate("pwd");
+            Assertions.assertThat(result).isEqualTo("/Users\n");
+        }
+
+        @Test
+        @DisplayName("cd . (staying in current directory)")
+        void cd_withCurrentDirectoryDot_doesNotChangePath() {
+            evaluator.evaluate("cd /Users");
+            evaluator.evaluate("cd .");
+            String result = evaluator.evaluate("pwd");
+            Assertions.assertThat(result).isEqualTo("/Users\n");
+        }
+
+        @Test
+        @DisplayName("cd with complex relative path (dots and subfolders)")
+        void cd_withComplexRelativePath_resolvesCorrectly() {
+            evaluator.evaluate("cd /Users");
+            // Move into rammohansharma, then up, then into Shared
+            evaluator.evaluate("cd ./rammohansharma/../Shared");
+            String result = evaluator.evaluate("pwd");
+            Assertions.assertThat(result).isEqualTo("/Users/Shared\n");
+        }
+
+        @Test
+        @DisplayName("cd .. from root stays at root")
+        void cd_upFromRoot_staysAtRoot() {
+            evaluator.evaluate("cd /");
+            evaluator.evaluate("cd ..");
+            String result = evaluator.evaluate("pwd");
+            Assertions.assertThat(result).isEqualTo("/\n");
+        }
+
+        @Test
+        @DisplayName("cd into a non-existent relative path returns error")
+        void cd_nonExistentRelativePath_returnsError() {
+            evaluator.evaluate("cd /Users");
+            String result = evaluator.evaluate("cd nonExistentFolder");
+            Assertions.assertThat(result).isEqualTo("cd: nonExistentFolder: No such file or directory\n");
+        }
+
+        @Test
+        @DisplayName("cd with multiple consecutive slashes")
+        void cd_withMultipleSlashes_treatsAsSingle() {
+            evaluator.evaluate("cd /Users///rammohansharma");
+            String result = evaluator.evaluate("pwd");
+            Assertions.assertThat(result).isEqualTo("/Users/rammohansharma\n");
         }
     }
 

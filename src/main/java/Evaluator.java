@@ -12,12 +12,12 @@ public class Evaluator {
     String currPath = System.getProperty("user.dir");
 
     public String evaluate(String command) {
-        String [] commandsParts = command.split(" ");
+        String[] commandsParts = command.split(" ");
         String evaluated = null;
-        switch(commandsParts[0]) {
+        switch (commandsParts[0]) {
             case "echo":
                 if (commandsParts.length > 1) {
-                    evaluated = String.format("%s\n", command.split(" ",2)[1]);
+                    evaluated = String.format("%s\n", command.split(" ", 2)[1]);
                 }
                 break;
             case "type":
@@ -34,8 +34,8 @@ public class Evaluator {
             default:
                 String path = null;
                 if ((path = searchInPath(commandsParts[0])) != null) {
-                List<String> arguments = new ArrayList<>(Arrays.asList(Arrays.copyOfRange(commandsParts,1,commandsParts.length)));
-                arguments.add(0,commandsParts[0]);
+                    List<String> arguments = new ArrayList<>(Arrays.asList(Arrays.copyOfRange(commandsParts, 1, commandsParts.length)));
+                    arguments.add(0, commandsParts[0]);
                     try {
                         ProcessBuilder pb = new ProcessBuilder(arguments);
                         pb.inheritIO();
@@ -51,13 +51,53 @@ public class Evaluator {
         return evaluated;
     }
 
-    private String handleCd(String path, String evaluated) {
+    private String handleCd(String command, String evaluated) {
+        String path = command;
+        if (path.charAt(0) != '/') { // relative path provided
+            List<String> pathParts = Arrays.asList(path.split("/"));
+            List<String> currPathParts = new ArrayList<>(Arrays.asList(currPath.split("/")));
+            for (String pathPart : pathParts) {
+                if (pathPart.equalsIgnoreCase("..")) {
+                    if (!currPathParts.isEmpty()) {
+                        currPathParts.removeLast();
+                    }
+                } else if (!pathPart.equalsIgnoreCase(".")) {
+                    currPathParts.add(pathPart);
+                }
+            }
+            path = buildPath(currPathParts);
+        }
+
         if (Files.isDirectory(Paths.get(path))) {
-            currPath = path;
+            currPath = removeExtraSlashes(path);
         } else {
-            evaluated = String.format("cd: %s: No such file or directory\n", path);
+            evaluated = String.format("cd: %s: No such file or directory\n", command);
         }
         return evaluated;
+    }
+
+    private String buildPath(List<String> pathParts) {
+        if (pathParts.isEmpty()) {
+            return "/";
+        }
+        StringBuilder sb = new StringBuilder();
+        for (String pathPart : pathParts) {
+            if (pathPart.isBlank())
+                continue;
+            sb.append("/");
+            sb.append(pathPart);
+        }
+        return sb.toString();
+    }
+
+    private String removeExtraSlashes(String path) {
+        StringBuilder sb = new StringBuilder("/");
+        for (int index = 1; index < path.length(); index++) {
+            if (!(path.charAt(index) == '/' && path.charAt(index - 1) == '/')) {
+                sb.append(path.charAt(index));
+            }
+        }
+        return sb.toString();
     }
 
     public String handleType(String command) {
@@ -73,11 +113,11 @@ public class Evaluator {
 
     public String searchInPath(String command) {
         String pathEnv = System.getenv("PATH");
-        String [] pathsList = pathEnv.split(":");
+        String[] pathsList = pathEnv.split(":");
         for (String path : pathsList) {
-            Path pathToFile = Paths.get(path,command);
+            Path pathToFile = Paths.get(path, command);
             if (Files.exists(pathToFile) && Files.isRegularFile(pathToFile) && Files.isExecutable(pathToFile)) {
-                return String.format("%s\n",pathToFile);
+                return String.format("%s\n", pathToFile);
             }
         }
         return null;
