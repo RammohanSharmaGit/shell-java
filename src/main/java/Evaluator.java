@@ -8,7 +8,7 @@ import java.util.List;
 
 public class Evaluator {
 
-    List<String> builtInCommands = Arrays.asList("echo", "type", "exit", "pwd");
+    List<String> builtInCommands = Arrays.asList("echo", "type", "exit", "pwd", "cd");
     String currPath = System.getProperty("user.dir");
 
     public String evaluate(String command) {
@@ -28,6 +28,9 @@ public class Evaluator {
             case "pwd":
                 evaluated = String.format("%s\n", currPath);
                 break;
+            case "cd":
+                evaluated = handleCd(commandsParts[1], evaluated);
+                break;
             default:
                 String path = null;
                 if ((path = searchInPath(commandsParts[0])) != null) {
@@ -44,6 +47,15 @@ public class Evaluator {
                     break;
                 }
                 evaluated = String.format("%s: command not found\n", command);
+        }
+        return evaluated;
+    }
+
+    private String handleCd(String path, String evaluated) {
+        if (Files.isDirectory(Paths.get(path))) {
+            currPath = path;
+        } else {
+            evaluated = String.format("cd: %s: No such file or directory\n", path);
         }
         return evaluated;
     }

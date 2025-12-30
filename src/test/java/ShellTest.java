@@ -42,6 +42,25 @@ class ShellTest {
     }
 
     @Nested
+    @DisplayName("Tests for 'cd' command")
+    class CDTests {
+        @Test
+        @DisplayName("cd with a correct path")
+        void cd_withCorrectPath_returnsPWDWithPath() {
+            evaluator.evaluate("cd /Users");
+            String result = evaluator.evaluate("pwd");
+            Assertions.assertThat(result).isEqualTo("/Users\n");
+        }
+
+        @Test
+        @DisplayName("cd with a random path")
+        void cd_withRandomPath_returnsError() {
+            String result = evaluator.evaluate("cd /random");
+            Assertions.assertThat(result).isEqualTo("cd: /random: No such file or directory\n");
+        }
+    }
+
+    @Nested
     @DisplayName("Tests for 'type' command")
     class TypeTests {
         @ParameterizedTest
