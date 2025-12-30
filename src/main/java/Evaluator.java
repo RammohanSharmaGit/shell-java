@@ -53,6 +53,12 @@ public class Evaluator {
 
     private String handleCd(String command, String evaluated) {
         String path = command;
+
+        if (command.equalsIgnoreCase("~")) {
+            currPath = System.getenv("HOME");
+            return evaluated;
+        }
+
         if (path.charAt(0) != '/') { // relative path provided
             List<String> pathParts = Arrays.asList(path.split("/"));
             List<String> currPathParts = new ArrayList<>(Arrays.asList(currPath.split("/")));
