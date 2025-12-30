@@ -8,7 +8,8 @@ import java.util.List;
 
 public class Evaluator {
 
-    List<String> builtInCommands = Arrays.asList("echo", "type", "exit");
+    List<String> builtInCommands = Arrays.asList("echo", "type", "exit", "pwd");
+    String currPath = System.getProperty("user.dir");
 
     public String evaluate(String command) {
         String [] commandsParts = command.split(" ");
@@ -23,6 +24,9 @@ public class Evaluator {
                 if (commandsParts.length > 1) {
                     evaluated = handleType(commandsParts[1]);
                 }
+                break;
+            case "pwd":
+                evaluated = String.format("%s\n", currPath);
                 break;
             default:
                 String path = null;
